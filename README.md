@@ -1,4 +1,4 @@
-## Overview
+# Overview
 
 This project uses d3.js to visualize comparisons of demographic information for each state (and Washington D.C.) in the US. The demographic information comes from th US Census Bureaus [2014 estimates](https://data.census.gov/cedsci/) (data.csv). All dependent variable are able to be visualized for any independent variable.
 
@@ -12,11 +12,11 @@ Dependent variables include:
 * Smokes (% of Population)
 * Lacks Healthcare (% of Population)
 
-# Part 1
+## Part 1
 
 The first visual is created by running app.js. This visual plots poverty % vs. lacking healthcare % for each state. Each state shows up as a bubble on a scatterplot, labeled by state abbreviation.
 
-# Part 2
+## Part 2
 
 The next visual is created by running app_dynamic.js. This plot is similar to Part 1 with a few additional features. Independent and dependent variable labels are added to the axis. Users can select an axis label, which adjusts the axis scale, the position of the bubbles to represent the newly selected axis parameter. The currently selected parameter is black while the others are colored grey.
 
