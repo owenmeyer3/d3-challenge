@@ -10,7 +10,7 @@ let chartStatMargins = {
 let chartStatHeight = svgStatHeight - chartStatMargins.top - chartStatMargins.bottom
 let chartStatWidth = svgStatWidth - chartStatMargins.left - chartStatMargins.right
 
-// Initalize x and y variables
+// Initalize variables
 let pointGroup = [];
 let xScale = [];
 let yScale = [];
@@ -25,6 +25,8 @@ let healthLabel;
 let smokeLabel;
 let obeseLabel;
 let data;
+let yVar;
+let xVar;
 
 // Append svg and inner chart to #scatter div
 let svgStat = d3.select('#scatter').append('svg')
@@ -35,6 +37,13 @@ let chartStat = svgStat.append('g')
     .attr('width', chartStatWidth)
     .attr('height', chartStatHeight)
     .attr('transform', `translate(${chartStatMargins.left}, ${chartStatMargins.top})`)
+
+let tool_tip = d3.tip()
+                .attr('class', 'd3-tip')
+                .offset([-8,0])
+                .html(function(d) { return `<text>${xVar}: ${d[xVar]}</text>
+                                            <br/>
+                                            <text>${yVar}: ${d[yVar]}</text>`});
 
 // Import data and parse
 d3.csv('./assets/data/data.csv').then(data => {
@@ -58,8 +67,8 @@ d3.csv('./assets/data/data.csv').then(data => {
         row.smokesLow = parseFloat(row.smokesLow);
     });
     // Set initial axis variables
-    let yVar = 'healthcare';
-    let xVar = 'poverty';
+    yVar = 'healthcare';
+    xVar = 'poverty';
 
     // Plot data on first scatter
     scatterStat(data, xVar, yVar);
@@ -69,12 +78,9 @@ function scatterStat(data, xVar, yVar) {
     // Set circle and text size
     var radius = 15;
     var bubbleTextSize = radius * 0.85;
-    console.log('pointGroup', pointGroup);
-    console.log('data', data);
 
     // Initial plot
     if (pointGroup.length == 0){
-        console.log('new');
         // Make scales (add/subtract 1 to keep circles off axes)
         xScale = d3.scaleLinear()
             .domain([d3.min(data.map(row => row[xVar]))-1, d3.max(data.map(row => row[xVar]))+1])
@@ -89,13 +95,20 @@ function scatterStat(data, xVar, yVar) {
         // Append axes
         xAxisTag = chartStat.append('g').attr('transform', `translate(0, ${chartStatHeight})`).call(xAxis);
         yAxisTag = chartStat.append('g').call(yAxis);
+
+        tool_tip.html(function(d) { return `<text>${xVar}: ${d[xVar]}</text>
+                                    <br/>
+                                    <text>${yVar}: ${d[yVar]}</text>`});
+        chartStat.call(tool_tip);
     
         // Make and place pointGroups
         pointGroup = chartStat.selectAll('g.pointGroup')
             .data(data).enter()
             .append('g')
             .attr('class', 'pointGroup')
-            .attr('transform', d => `translate(${xScale(d[xVar])}, ${yScale(d[yVar])})`);
+            .attr('transform', d => `translate(${xScale(d[xVar])}, ${yScale(d[yVar])})`)
+            .on('mouseover', tool_tip.show)
+            .on('mouseout', tool_tip.hide);
         
         // Append circles to point groups
         pointGroup.append('circle')
@@ -169,7 +182,6 @@ function scatterStat(data, xVar, yVar) {
             smokeLabel.style('fill','grey');
             scatterStat(data, xVar, 'obesity')});
     }else{
-        console.log('exists')
         // Make axis labels clickable
         povLabel.on('click', () => {
             povLabel.style('fill','black');
@@ -201,6 +213,11 @@ function scatterStat(data, xVar, yVar) {
             healthLabel.style('fill','grey');
             smokeLabel.style('fill','grey');
             scatterStat(data, xVar, 'obesity')});
+        
+        tool_tip.html(function(d) { return `<text>${xVar}: ${d[xVar]}</text>
+                                            <br/>
+                                            <text>${yVar}: ${d[yVar]}</text>`});
+        chartStat.call(tool_tip);
         
         // Update scales
         xScale.domain([d3.min(data.map(row => row[xVar]))-1, d3.max(data.map(row => row[xVar]))+1]).nice();
