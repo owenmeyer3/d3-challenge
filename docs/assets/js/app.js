@@ -11,7 +11,7 @@ let chartStatHeight = svgStatHeight - chartStatMargins.top - chartStatMargins.bo
 let chartStatWidth = svgStatWidth - chartStatMargins.left - chartStatMargins.right
 
 // Append svg and inner chart to #scatter div
-let svgStat = d3.select('#scatter').append('svg')
+let svgStat = d3.select('#scatter1').append('svg')
     .attr('width', svgStatWidth)
     .attr('height', svgStatHeight);
 let chartStat = svgStat.append('g')

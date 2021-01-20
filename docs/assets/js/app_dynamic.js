@@ -29,7 +29,7 @@ let yVar;
 let xVar;
 
 // Append svg and inner chart to #scatter div
-let svgStat = d3.select('#scatter').append('svg')
+let svgStat = d3.select('#scatter2').append('svg')
     .attr('width', svgStatWidth)
     .attr('height', svgStatHeight);
 let chartStat = svgStat.append('g')
@@ -46,7 +46,8 @@ let tool_tip = d3.tip()
                                             <text>${yVar}: ${d[yVar]}</text>`});
 
 // Import data and parse
-d3.csv('./assets/data/data.csv').then(data => {
+d3.csv('./assets/data/data.csv').then(data1 => {
+    data = data1;
     // Parse data
     data.forEach(row => {
         row.age = parseFloat(row.age);
@@ -67,171 +68,159 @@ d3.csv('./assets/data/data.csv').then(data => {
         row.smokesLow = parseFloat(row.smokesLow);
     });
     // Set initial axis variables
-    yVar = 'healthcare';
     xVar = 'poverty';
+    yVar = 'healthcare';
 
-    // Plot data on first scatter
+    // Construct chart
     scatterStat(data, xVar, yVar);
 });
+
+function clickXLabel(){
+    var label = d3.select(this);
+    label.attr('fill','black');
+    if(label.attr('id') == 'povLabel'){
+        d3.select('#ageLabel').attr('fill','grey');
+        d3.select('#incomeLabel').attr('fill','grey');
+        xVar = 'poverty';
+    }else if (label.attr('id') == 'ageLabel'){
+        label.attr('fill','black');
+        d3.select('#povLabel').attr('fill','grey');
+        d3.select('#incomeLabel').attr('fill','grey');
+        xVar = 'age';
+    }else{
+        label.attr('fill','black');
+        d3.select('#povLabel').attr('fill','grey');
+        d3.select('#ageLabel').attr('fill','grey');
+        xVar = 'income';
+    };
+    xScale.domain([d3.min(data.map(row => row[xVar]))-1, d3.max(data.map(row => row[xVar]))+1]).nice();
+    xAxis = d3.axisBottom(xScale);
+    xAxisTag.transition(400).call(xAxis);
+    pointGroup.transition().attr('transform', d => `translate(${xScale(d[xVar])}, ${yScale(d[yVar])})`);
+    
+    tool_tip.html(function(d) { return `<text>${xVar}: ${d[xVar]}</text>
+        <br/>
+        <text>${yVar}: ${d[yVar]}</text>`});
+    chartStat.call(tool_tip);
+
+};
+
+function clickYLabel(){
+    var label = d3.select(this);
+    label.attr('fill','black');
+    if(label.attr('id') == 'healthLabel'){
+        d3.select('#smokeLabel').attr('fill','grey');
+        d3.select('#obeseLabel').attr('fill','grey');
+        yVar = 'healthcare';
+    }else if (label.attr('id') == 'smokeLabel'){
+        label.attr('fill','black');
+        d3.select('#healthLabel').attr('fill','grey');
+        d3.select('#obeseLabel').attr('fill','grey');
+        yVar = 'smokes';
+    }else{
+        label.attr('fill','black');
+        d3.select('#smokeLabel').attr('fill','grey');
+        d3.select('#ageLabel').attr('fill','grey');
+        yVar = 'obesity';
+    };
+    yScale.domain([d3.min(data.map(row => row[yVar]))-1, d3.max(data.map(row => row[yVar]))+1]).nice();
+    yAxis = d3.axisLeft(yScale);
+    yAxisTag.transition(400).call(yAxis);
+    pointGroup.transition().attr('transform', d => `translate(${xScale(d[xVar])}, ${yScale(d[yVar])})`);
+
+    tool_tip.html(function(d) { return `<text>${xVar}: ${d[xVar]}</text>
+        <br/>
+        <text>${yVar}: ${d[yVar]}</text>`});
+    chartStat.call(tool_tip);
+};
 
 function scatterStat(data, xVar, yVar) {
     // Set circle and text size
     var radius = 15;
     var bubbleTextSize = radius * 0.85;
 
-    // Initial plot
-    if (pointGroup.length == 0){
-        // Make scales (add/subtract 1 to keep circles off axes)
-        xScale = d3.scaleLinear()
-            .domain([d3.min(data.map(row => row[xVar]))-1, d3.max(data.map(row => row[xVar]))+1])
-            .range([0, chartStatWidth]).nice();
-        yScale = d3.scaleLinear()
-            .domain([d3.min(data.map(row => row[yVar]))-1, d3.max(data.map(row => row[yVar]))+1])
-            .range([chartStatHeight, 0]).nice();
-        // Make axes
-        xAxis = d3.axisBottom(xScale);
-        yAxis = d3.axisLeft(yScale);
+    // Make scales (add/subtract 1 to keep circles off axes)
+    xScale = d3.scaleLinear()
+        .domain([d3.min(data.map(row => row[xVar]))-1, d3.max(data.map(row => row[xVar]))+1])
+        .range([0, chartStatWidth]).nice();
+    yScale = d3.scaleLinear()
+        .domain([d3.min(data.map(row => row[yVar]))-1, d3.max(data.map(row => row[yVar]))+1])
+        .range([chartStatHeight, 0]).nice();
+    // Make axes
+    xAxis = d3.axisBottom(xScale);
+    yAxis = d3.axisLeft(yScale);
 
-        // Append axes
-        xAxisTag = chartStat.append('g').attr('transform', `translate(0, ${chartStatHeight})`).call(xAxis);
-        yAxisTag = chartStat.append('g').call(yAxis);
+    // Append axes
+    xAxisTag = chartStat.append('g').attr('transform', `translate(0, ${chartStatHeight})`).call(xAxis);
+    yAxisTag = chartStat.append('g').call(yAxis);
 
-        tool_tip.html(function(d) { return `<text>${xVar}: ${d[xVar]}</text>
-                                    <br/>
-                                    <text>${yVar}: ${d[yVar]}</text>`});
-        chartStat.call(tool_tip);
+    // Add tooltip
+    tool_tip.html(function(d) { return `<text>${xVar}: ${d[xVar]}</text>
+                                <br/>
+                                <text>${yVar}: ${d[yVar]}</text>`});
+    chartStat.call(tool_tip);
+
+    // Make and place pointGroups
+    pointGroup = chartStat.selectAll('g.pointGroup')
+        .data(data).enter()
+        .append('g')
+        .attr('class', 'pointGroup')
+        .attr('transform', d => `translate(${xScale(d[xVar])}, ${yScale(d[yVar])})`)
+        .on('mouseover', tool_tip.show)
+        .on('mouseout', tool_tip.hide);
     
-        // Make and place pointGroups
-        pointGroup = chartStat.selectAll('g.pointGroup')
-            .data(data).enter()
-            .append('g')
-            .attr('class', 'pointGroup')
-            .attr('transform', d => `translate(${xScale(d[xVar])}, ${yScale(d[yVar])})`)
-            .on('mouseover', tool_tip.show)
-            .on('mouseout', tool_tip.hide);
-        
-        // Append circles to point groups
-        pointGroup.append('circle')
-            .attr('class', 'pointCircle')
-            .attr('r', radius)
-            .style('fill', 'black')
-            .attr('opacity', 0.3);
+    // Append circles to point groups
+    pointGroup.append('circle')
+        .attr('class', 'pointCircle')
+        .attr('r', radius)
+        .attr('fill', 'black')
+        .attr('opacity', 0.3);
 
-        // Append text to point groups
-        pointGroup.append('text')
-            .text(d => d.abbr)
-            .style("font-size", `${bubbleTextSize}px`)
-            .style('fill', 'white')
-            .attr('transform', `translate(${-bubbleTextSize / 1.6}, ${bubbleTextSize / 2.5})`);
+    // Append text to point groups
+    pointGroup.append('text')
+        .text(d => d.abbr)
+        .style("font-size", `${bubbleTextSize}px`)
+        .attr('fill', 'white')
+        .attr('transform', `translate(${-bubbleTextSize / 1.6}, ${bubbleTextSize / 2.5})`);
 
-        // Append x-axis labels
-        povLabel = chartStat.append("text")            
-            .attr("transform",`translate(${chartStatWidth/2}, ${chartStatHeight + 40})`)
-            .text('In Poverty (%)');
-        ageLabel = chartStat.append("text")             
-            .attr("transform",`translate(${chartStatWidth/2}, ${chartStatHeight + 60})`)
-            .text('Age (median years)')
-            .style('fill','grey');;
-        incomeLabel = chartStat.append("text")             
-            .attr("transform",`translate(${chartStatWidth/2}, ${chartStatHeight + 80})`)
-            .text('Household Income (median $)')
-            .style('fill','grey');;
+    // Append x-axis labels
+    povLabel = chartStat.append("text")
+        .attr('id','povLabel')            
+        .attr("transform",`translate(${chartStatWidth/2}, ${chartStatHeight + 40})`)
+        .text('In Poverty (%)');
+    ageLabel = chartStat.append("text")
+        .attr('id','ageLabel')            
+        .attr("transform",`translate(${chartStatWidth/2}, ${chartStatHeight + 60})`)
+        .text('Age (median years)')
+        .attr('fill','grey');;
+    incomeLabel = chartStat.append("text")
+        .attr('id','incomeLabel')            
+        .attr("transform",`translate(${chartStatWidth/2}, ${chartStatHeight + 80})`) 
+        .text('Household Income (median $)')
+        .attr('fill','grey');;
 
-        // Append y-axis labels
-        healthLabel = chartStat.append("text")            
-            .attr("transform", `translate(${-40}, ${chartStatHeight / 2}) rotate(-90)`)
-            .text('Lacks Healthcare (%)');
-        smokeLabel = chartStat.append("text")            
-            .attr("transform", `translate(${-60}, ${chartStatHeight / 2}) rotate(-90)`)
-            .text('Smokes (%)')
-            .style('fill','grey');;
-        obeseLabel = chartStat.append("text")            
-            .attr("transform", `translate(${-80}, ${chartStatHeight / 2}) rotate(-90)`)
-            .text('Obese (%)')
-            .style('fill','grey');
+    // Append y-axis labels
+    healthLabel = chartStat.append("text") 
+        .attr('id','healthLabel')             
+        .attr("transform", `translate(${-40}, ${chartStatHeight / 2}) rotate(-90)`)
+        .text('Lacks Healthcare (%)');
+    smokeLabel = chartStat.append("text")
+        .attr('id','smokeLabel')            
+        .attr("transform", `translate(${-60}, ${chartStatHeight / 2}) rotate(-90)`)
+        .text('Smokes (%)')
+        .attr('fill','grey');;
+    obeseLabel = chartStat.append("text")
+        .attr('id','obeseLabel')            
+        .attr("transform", `translate(${-80}, ${chartStatHeight / 2}) rotate(-90)`)
+        .text('Obese (%)')
+        .attr('fill','grey');
 
-        // Make axis labels clickable
-        povLabel.on('click', () => {
-            povLabel.style('fill','black');
-            ageLabel.style('fill','grey');
-            incomeLabel.style('fill','grey');
-            scatterStat(data, 'poverty', yVar)});
-        ageLabel.on('click', () => {
-            ageLabel.style('fill','black');
-            povLabel.style('fill','grey');
-            incomeLabel.style('fill','grey');
-            scatterStat(data, 'age', yVar)});
-        incomeLabel.on('click', () => {
-            incomeLabel.style('fill','black');
-            povLabel.style('fill','grey');
-            ageLabel.style('fill','grey');
-            scatterStat(data, 'income', yVar)});
-        healthLabel.on('click', () => {
-            healthLabel.style('fill','black');
-            smokeLabel.style('fill','grey');
-            obeseLabel.style('fill','grey');
-            scatterStat(data, xVar, 'healthcare')});
-        smokeLabel.on('click', () => {
-            smokeLabel.style('fill','black');
-            healthLabel.style('fill','grey');
-            obeseLabel.style('fill','grey');
-            scatterStat(data, xVar, 'smokes')});
-        obeseLabel.on('click', () => {
-            obeseLabel.style('fill','black');
-            healthLabel.style('fill','grey');
-            smokeLabel.style('fill','grey');
-            scatterStat(data, xVar, 'obesity')});
-    }else{
-        // Make axis labels clickable
-        povLabel.on('click', () => {
-            povLabel.style('fill','black');
-            ageLabel.style('fill','grey');
-            incomeLabel.style('fill','grey');
-            scatterStat(data, 'poverty', yVar)});
-        ageLabel.on('click', () => {
-            ageLabel.style('fill','black');
-            povLabel.style('fill','grey');
-            incomeLabel.style('fill','grey');
-            scatterStat(data, 'age', yVar)});
-        incomeLabel.on('click', () => {
-            incomeLabel.style('fill','black');
-            povLabel.style('fill','grey');
-            ageLabel.style('fill','grey');
-            scatterStat(data, 'income', yVar)});
-        healthLabel.on('click', () => {
-            healthLabel.style('fill','black');
-            smokeLabel.style('fill','grey');
-            obeseLabel.style('fill','grey');
-            scatterStat(data, xVar, 'healthcare')});
-        smokeLabel.on('click', () => {
-            smokeLabel.style('fill','black');
-            healthLabel.style('fill','grey');
-            obeseLabel.style('fill','grey');
-            scatterStat(data, xVar, 'smokes')});
-        obeseLabel.on('click', () => {
-            obeseLabel.style('fill','black');
-            healthLabel.style('fill','grey');
-            smokeLabel.style('fill','grey');
-            scatterStat(data, xVar, 'obesity')});
-        
-        tool_tip.html(function(d) { return `<text>${xVar}: ${d[xVar]}</text>
-                                            <br/>
-                                            <text>${yVar}: ${d[yVar]}</text>`});
-        chartStat.call(tool_tip);
-        
-        // Update scales
-        xScale.domain([d3.min(data.map(row => row[xVar]))-1, d3.max(data.map(row => row[xVar]))+1]).nice();
-        yScale.domain([d3.min(data.map(row => row[yVar]))-1, d3.max(data.map(row => row[yVar]))+1]).nice();
+    // Make axis labels clickable
+    povLabel.on('click', clickXLabel);
+    ageLabel.on('click', clickXLabel);
+    incomeLabel.on('click', clickXLabel);
+    healthLabel.on('click', clickYLabel);
+    smokeLabel.on('click', clickYLabel);
+    obeseLabel.on('click', clickYLabel);
 
-        // Move points
-        pointGroup.transition().attr('transform', d => `translate(${xScale(d[xVar])}, ${yScale(d[yVar])})`);
-        // Reset scales
-        xAxis = d3.axisBottom(xScale);
-        yAxis = d3.axisLeft(yScale);
-
-        // Update Axes
-        xAxisTag.transition(400).call(xAxis);
-        yAxisTag.transition(400).call(yAxis);
-    };
 };
-
