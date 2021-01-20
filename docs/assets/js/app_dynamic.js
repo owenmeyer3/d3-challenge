@@ -27,6 +27,7 @@ let obeseLabel;
 let data;
 let yVar;
 let xVar;
+let titleLabel;
 
 // Append svg and inner chart to #scatter div
 let svgStat = d3.select('#scatter2').append('svg')
@@ -38,16 +39,13 @@ let chartStat = svgStat.append('g')
     .attr('height', chartStatHeight)
     .attr('transform', `translate(${chartStatMargins.left}, ${chartStatMargins.top})`)
 
-let tool_tip = d3.tip()
-                .attr('class', 'd3-tip')
-                .offset([-8,0])
-                .html(function(d) { return `<text>${xVar}: ${d[xVar]}</text>
-                                            <br/>
-                                            <text>${yVar}: ${d[yVar]}</text>`});
+// create tooltip to append to points on plot
+ let tool_tip = d3.tip().attr('class', 'd3-tip').offset([-8,0])
 
 // Import data and parse
-d3.csv('./assets/data/data.csv').then(data1 => {
-    data = data1;
+d3.csv('./assets/data/data.csv').then(dataIn => {
+    console.log(dataIn);
+    data = dataIn;
     // Parse data
     data.forEach(row => {
         row.age = parseFloat(row.age);
@@ -75,7 +73,10 @@ d3.csv('./assets/data/data.csv').then(data1 => {
     scatterStat(data, xVar, yVar);
 });
 
+// Handle click of x-axis label
 function clickXLabel(){
+    // Make label black. Make other labels grey.
+    // Make label variable stored as the x variable to be displayed on plot
     var label = d3.select(this);
     label.attr('fill','black');
     if(label.attr('id') == 'povLabel'){
@@ -93,19 +94,25 @@ function clickXLabel(){
         d3.select('#ageLabel').attr('fill','grey');
         xVar = 'income';
     };
+    // Adjust scales to new x variable
     xScale.domain([d3.min(data.map(row => row[xVar]))-1, d3.max(data.map(row => row[xVar]))+1]).nice();
     xAxis = d3.axisBottom(xScale);
     xAxisTag.transition(400).call(xAxis);
+
+    // Adjust points to new x variable
     pointGroup.transition().attr('transform', d => `translate(${xScale(d[xVar])}, ${yScale(d[yVar])})`);
-    
-    tool_tip.html(function(d) { return `<text>${xVar}: ${d[xVar]}</text>
-        <br/>
-        <text>${yVar}: ${d[yVar]}</text>`});
+
+    // Adjust tooltip to new x variable
+    tool_tip.html(function(d) { return `<text>${d['abbr']}</text><br/><text>${xVar}: ${d[xVar]}</text><br/><text>${yVar}: ${d[yVar]}</text>`});
     chartStat.call(tool_tip);
+    // Adjust title to new x variable
+    titleLabel.text(`${xVar.charAt(0).toUpperCase() + xVar.slice(1)} vs. ${yVar.charAt(0).toUpperCase() + yVar.slice(1)} by State`);
 
 };
-
+// Handle click of y-axis label
 function clickYLabel(){
+    // Make label black. Make other labels grey.
+    // Make label variable stored as the y variable to be displayed on plot
     var label = d3.select(this);
     label.attr('fill','black');
     if(label.attr('id') == 'healthLabel'){
@@ -123,15 +130,20 @@ function clickYLabel(){
         d3.select('#ageLabel').attr('fill','grey');
         yVar = 'obesity';
     };
+    // Adjust scales to new y variable
     yScale.domain([d3.min(data.map(row => row[yVar]))-1, d3.max(data.map(row => row[yVar]))+1]).nice();
     yAxis = d3.axisLeft(yScale);
     yAxisTag.transition(400).call(yAxis);
+
+    // Adjust points to new y variable
     pointGroup.transition().attr('transform', d => `translate(${xScale(d[xVar])}, ${yScale(d[yVar])})`);
 
-    tool_tip.html(function(d) { return `<text>${xVar}: ${d[xVar]}</text>
-        <br/>
-        <text>${yVar}: ${d[yVar]}</text>`});
+    // Adjust tooltip to new y variable
+    tool_tip.html(function(d) { return `<text>${d['abbr']}</text><br/><text>${xVar}: ${d[xVar]}</text><br/><text>${yVar}: ${d[yVar]}</text>`});
     chartStat.call(tool_tip);
+
+    // Adjust title to new y variable
+    titleLabel.text(`${xVar.charAt(0).toUpperCase() + xVar.slice(1)} vs. ${yVar.charAt(0).toUpperCase() + yVar.slice(1)} by State`);
 };
 
 function scatterStat(data, xVar, yVar) {
@@ -146,6 +158,7 @@ function scatterStat(data, xVar, yVar) {
     yScale = d3.scaleLinear()
         .domain([d3.min(data.map(row => row[yVar]))-1, d3.max(data.map(row => row[yVar]))+1])
         .range([chartStatHeight, 0]).nice();
+
     // Make axes
     xAxis = d3.axisBottom(xScale);
     yAxis = d3.axisLeft(yScale);
@@ -155,9 +168,7 @@ function scatterStat(data, xVar, yVar) {
     yAxisTag = chartStat.append('g').call(yAxis);
 
     // Add tooltip
-    tool_tip.html(function(d) { return `<text>${xVar}: ${d[xVar]}</text>
-                                <br/>
-                                <text>${yVar}: ${d[yVar]}</text>`});
+    tool_tip.html(function(d) { return `<text>${d['abbr']}</text><br/><text>${xVar}: ${d[xVar]}</text><br/><text>${yVar}: ${d[yVar]}</text>`});
     chartStat.call(tool_tip);
 
     // Make and place pointGroups
@@ -214,6 +225,13 @@ function scatterStat(data, xVar, yVar) {
         .attr("transform", `translate(${-80}, ${chartStatHeight / 2}) rotate(-90)`)
         .text('Obese (%)')
         .attr('fill','grey');
+    
+    // Append title
+    nameCapitalized = xVar.charAt(0).toUpperCase() + xVar.slice(1)
+    titleLabel = chartStat.append("text")             
+    .attr("transform",`translate(${chartStatWidth1/2}, ${-40})`)
+    .text(`${xVar.charAt(0).toUpperCase() + xVar.slice(1)} vs. ${yVar.charAt(0).toUpperCase() + yVar.slice(1)} by State`);
+    
 
     // Make axis labels clickable
     povLabel.on('click', clickXLabel);

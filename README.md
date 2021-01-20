@@ -18,8 +18,12 @@ The first visual is created by running app.js. This visual plots poverty % vs. l
 
 ## Part 2
 
-The next visual is created by running app_dynamic.js. This plot is similar to Part 1 with a few additional features. Independent and dependent variable labels are added to the axis. Users can select an axis label, which adjusts the axis scale, the position of the bubbles to represent the newly selected axis parameter. The currently selected parameter is black while the others are colored grey.
+The next visual is created by running app_dynamic.js. This plot is similar to Part 1 with a few additional features. Independent and dependent variable labels are added to the axis. Users can select an axis label, which adjusts the axis scale, plot title and position of the bubbles to represent the newly selected axis parameter. The currently selected parameter is black while the others are colored grey.
 
-Tooltip popups appear when the user hovers the mouse over any bubble to reveal the exact coordinates of the bubble. The tooltip adapts to the selected axes. The tooltip comes from the `d3-tip.js` plugin developed by [Justin Palmer](https://github.com/Caged)
+Tooltip popups appear when the user hovers the mouse over any bubble to reveal the state abbreviation and exact x-y coordinates of the bubble. The tooltip adapts to the selected axes. The tooltip comes from the `d3-tip.js` plugin developed by [Justin Palmer](https://github.com/Caged)
 
 Transitions are included when bubbles or axes move. This provides a sleek interface for the user.
+
+## Part 3
+
+Observations are included to explain correlations found in the data.
